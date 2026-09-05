@@ -18,7 +18,7 @@ The renderer writes a 480x272 framebuffer in software. It does not use the PSP G
 
 - Reads stored and deflated CBZ entries without unpacking them to disk
 - Fit-width, fit-screen, and rotated reading modes
-- 1.25x or 1.75x magnification with analog panning
+- 1.25x or 1.75x magnification, plus 2x zoom for spreads, with analog panning
 - Optional scan-margin cropping
 - Manga right-to-left and western left-to-right page order
 - Optional page slide transitions
@@ -103,7 +103,7 @@ Pages 720 to 800 pixels wide load faster. For larger JPEG pages, Tankobon uses t
 | D-pad up / down    | Scroll quickly                                   |
 | L / R              | Move to the previous or next page                |
 | D-pad left / right | Turn the page according to the reading direction |
-| Square             | Toggle the magnifier                             |
+| Square             | Cycle magnifier → 2x zoom → normal               |
 | Circle             | Change the view mode                             |
 | Triangle           | Close the volume                                 |
 | Start              | Open options                                     |

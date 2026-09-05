@@ -380,6 +380,7 @@ int settings_cursor = 0;
 int hud_display_frames = 0;
 int page_load_error = 0;
 
+/* 0 = normal, 1 = standard magnifier, 2 = double zoom. */
 int is_magnified = 0;
 int mag_offset_x = 0;
 int mag_offset_y = 0;
@@ -2250,16 +2251,17 @@ static void page_render_size(int src_w, int src_h, int *out_w, int *out_h) {
         float sx = (float)SCREEN_HEIGHT / (float)src_w;
         float sy = (float)SCREEN_WIDTH / (float)src_h;
         scale = sx < sy ? sx : sy;
-        if (is_magnified) scale *= 1.25f;
     } else if (config.view_mode == VIEW_FIT_SCREEN) {
         float sx = (float)SCREEN_WIDTH / (float)src_w;
         float sy = (float)SCREEN_HEIGHT / (float)src_h;
         scale = sx < sy ? sx : sy;
-        if (is_magnified) scale *= 1.75f;
     } else {
         scale = (float)SCREEN_WIDTH / (float)src_w;
-        if (is_magnified) scale *= 1.25f;
     }
+
+    if (is_magnified == 2) scale *= 2.0f;
+    else if (is_magnified == 1)
+        scale *= config.view_mode == VIEW_FIT_SCREEN ? 1.75f : 1.25f;
 
     *out_w = (int)(src_w * scale);
     *out_h = (int)(src_h * scale);
@@ -2495,7 +2497,7 @@ void render_help_modal(unsigned int *vram, int p) {
     static const char *acts[]   = { "Scroll and pan the page",
                                     "Fast scroll",
                                     "Previous / next page",
-                                    "Toggle magnifier",
+                                    "Cycle zoom / 2x / normal",
                                     "Cycle view mode",
                                     "Close volume",
                                     "Options",
@@ -2888,6 +2890,7 @@ void render_reader_screen(unsigned int *vram) {
                     ? 256 : (hud_display_frames * 256) / HUD_FADE_FRAMES;
         const char *mode = (config.view_mode == VIEW_FIT_WIDTH) ? "FIT WIDTH" :
                            (config.view_mode == VIEW_FIT_SCREEN) ? "FIT SCREEN" : "ROTATED";
+        const char *zoom = is_magnified == 2 ? "ZOOM 2X" : "ZOOM";
         char osd[32];
         int w;
 
@@ -2897,11 +2900,11 @@ void render_reader_screen(unsigned int *vram) {
         draw_rect_blend(vram, SCREEN_WIDTH - w - 10, 10, w, 18, 0xFF000000U, (alpha * 190) >> 8);
         draw_text_blend(vram, SCREEN_WIDTH - w - 2, 15, osd, COL_FG, alpha);
 
-        w = text_width(mode) + (is_magnified ? text_width(" ZOOM") : 0) + 16;
+        w = text_width(mode) + (is_magnified ? text_width(zoom) + 8 : 0) + 16;
         draw_rect_blend(vram, 10, 10, w, 18, 0xFF000000U, (alpha * 190) >> 8);
         draw_text_blend(vram, 18, 15, mode, COL_FG_DIM, alpha);
         if (is_magnified) {
-            draw_text_blend(vram, 18 + text_width(mode) + 8, 15, "ZOOM", COL_ACCENT, alpha);
+            draw_text_blend(vram, 18 + text_width(mode) + 8, 15, zoom, COL_ACCENT, alpha);
         }
     }
 
@@ -3318,7 +3321,7 @@ int main(int argc, char *argv[]) {
                 int go_prev = 0;
 
                 if (pressed & PSP_CTRL_SQUARE) {
-                    is_magnified = !is_magnified;
+                    is_magnified = (is_magnified + 1) % 3;
                     hud_display_frames = HUD_HOLD_FRAMES + HUD_FADE_FRAMES;
                     needs_redraw = 1;
                 }
